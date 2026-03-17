@@ -44,6 +44,41 @@ class ConfigEnvCompatibilityTestCase(unittest.TestCase):
         self.assertTrue(config.schedule_run_immediately)
         self.assertFalse(config.run_immediately)
 
+    @patch("src.config.setup_env")
+    @patch.object(Config, "_parse_litellm_yaml", return_value=[])
+    def test_empty_legacy_run_immediately_stays_false_when_schedule_alias_is_unset(
+        self,
+        _mock_parse_yaml,
+        _mock_setup_env,
+    ) -> None:
+        env = {
+            "RUN_IMMEDIATELY": "",
+        }
+
+        with patch.dict(os.environ, env, clear=True):
+            config = Config._load_from_env()
+
+        self.assertFalse(config.schedule_run_immediately)
+        self.assertFalse(config.run_immediately)
+
+    @patch("src.config.setup_env")
+    @patch.object(Config, "_parse_litellm_yaml", return_value=[])
+    def test_empty_schedule_run_immediately_stays_false_without_falling_back(
+        self,
+        _mock_parse_yaml,
+        _mock_setup_env,
+    ) -> None:
+        env = {
+            "RUN_IMMEDIATELY": "true",
+            "SCHEDULE_RUN_IMMEDIATELY": "",
+        }
+
+        with patch.dict(os.environ, env, clear=True):
+            config = Config._load_from_env()
+
+        self.assertFalse(config.schedule_run_immediately)
+        self.assertTrue(config.run_immediately)
+
 
 if __name__ == "__main__":
     unittest.main()

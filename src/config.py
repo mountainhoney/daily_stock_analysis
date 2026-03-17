@@ -859,10 +859,20 @@ class Config:
             # 未显式配置时，根据消息类型选择默认字节数
             wechat_max_bytes = 2048 if wechat_msg_type_lower == 'text' else 4000
 
-        legacy_run_immediately = parse_env_bool(os.getenv('RUN_IMMEDIATELY'), default=True)
-        schedule_run_immediately = parse_env_bool(
-            os.getenv('SCHEDULE_RUN_IMMEDIATELY'),
-            default=legacy_run_immediately,
+        # Preserve historical semantics for startup flags: only an explicit
+        # literal "true" enables immediate execution; empty strings stay False.
+        legacy_run_immediately_env = os.getenv('RUN_IMMEDIATELY')
+        legacy_run_immediately = (
+            legacy_run_immediately_env.lower() == 'true'
+            if legacy_run_immediately_env is not None
+            else True
+        )
+
+        schedule_run_immediately_env = os.getenv('SCHEDULE_RUN_IMMEDIATELY')
+        schedule_run_immediately = (
+            schedule_run_immediately_env.lower() == 'true'
+            if schedule_run_immediately_env is not None
+            else legacy_run_immediately
         )
         
         return cls(
